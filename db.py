@@ -4,6 +4,9 @@ from PyQt5.QtCore import *
 
 
 class Config:
+    """
+    возвращает из базы данных переменные, указанные в init в нужном формате
+    """
     def __init__(self, last_update_time=0, pos_x=0, pos_y=0, pallette_id=1, time_zone_id=1) -> None:
         self._id = 1
         self._last_update_time: int = last_update_time
@@ -12,7 +15,7 @@ class Config:
         self._pallette_id: int = pallette_id
         self._time_zone_id: int = time_zone_id
 
-    @property
+    @property # использую property, чтобы потом не писать скобки
     def id(self) -> int:
         return self._id
 
@@ -23,6 +26,7 @@ class Config:
     @property
     def last_update_time_as_dt(self):
         return QDateTime.fromSecsSinceEpoch(self._last_update_time)
+    # обновляю дату и время
 
     def set_last_update_time(self, when: QDateTime):
         self._last_update_time = when.toSecsSinceEpoch()
@@ -45,6 +49,9 @@ class Config:
 
 
 class Alarm:
+    """
+    возвращает из базы данных переменные, указанные в init в нужном формате
+    """
     def __init__(self, id = 0, time:str = "00:00:00", type_id = 1) -> None:
         self._id: int = id
         self._time: int = time
@@ -66,10 +73,14 @@ class Alarm:
     def time_as_dt(self) -> QDateTime:
         tm: QTime = self.time_as_tm
         now = QDateTime.currentDateTime()
-        if now.time() > tm:
+        if now.time() > tm: # если нынешнее время позже поставленного будильника я добавляю день
             return QDateTime(now.date().addDays(1)).addMSecs(tm.msecsSinceStartOfDay())
-        else:
+        else: # если нет, то рассчитываю колво милисекунд до будильника
             return QDateTime(now.date()).addMSecs(tm.msecsSinceStartOfDay())
+    """
+    в зависимости от того, ставлю я будильник на завтра или же на сегодня
+    я записываю время и дату будильника
+    """
 
     @property
     def type_id(self) -> int:
@@ -77,6 +88,9 @@ class Alarm:
 
 
 class Pallette:
+    """
+    возвращает из базы данных переменные, указанные в init в нужном формате
+    """
     def __init__(self, id=0, name="", true_color="", false_color="") -> None:
         self._id = id
         self._name = name
@@ -105,6 +119,10 @@ class Pallette:
 
 
 class AlarmDb:
+    """
+    возвращает из базы данных переменные, указанные в init в нужном формате,
+    так же тут я указываю изначальную базу данных
+    """
     def __init__(self, db_path='alarms.sqlite') -> None:
         self._con = sqlite3.connect(db_path)
         self._alarm_type: Dict[int, str] = {}
@@ -116,7 +134,7 @@ class AlarmDb:
     
     def load_alarms(self):
         self._alarms.clear()
-        # load alarms
+        # загружаю из бд все, что понадобилось для будильника
         cur = self._con.cursor()
         alarm_rowset = cur.execute("SELECT alarm_id, alarm_time, alarm_type_id FROM alarm").fetchall()
         for alarm in alarm_rowset:
@@ -126,32 +144,29 @@ class AlarmDb:
 
     
     def load_data(self):
-        """
-        s,fvg;ldfm;mg;dfnmbm"
-        """
         self._alarm_type.clear()
         self._pallettes.clear()
         self._time_zones.clear()
 
-        # load alarm types
+        # загружаю из бд тип будильника, то есть once/daily
         cur = self._con.cursor()
         alarm_type_rowset = cur.execute("SELECT alarm_type_id, alarm_type_name FROM alarm_type").fetchall()
         for alarm_type in alarm_type_rowset:
             self._alarm_type[alarm_type[0]] = alarm_type[1]
 
-        # load alarms
+        # загружаю из бд палитру
         cur = self._con.cursor()
         pallette_rowset = cur.execute("SELECT pallette_id, pallette_name, true_color, false_color FROM pallette").fetchall()
         for pallette in pallette_rowset:
             self._pallettes[pallette[1]] = Pallette(pallette[0], pallette[1], pallette[2], pallette[3])
 
-        # load time zones
+        # загружаю из бд координированное время, то есть utc/local
         cur = self._con.cursor()
         tz_rowset = cur.execute("SELECT time_zone_id, time_zone_name FROM time_zone").fetchall()
         for tz in tz_rowset:
             self._time_zones[tz[0]] = tz[1]
 
-        # load config
+        # загружаю из бд все изменения, которые были при открытии программы
         cur = self._con.cursor()
         cfg_rowset = cur.execute("SELECT config_id, last_update_time, pos_x, pos_y, pallette_id, time_zone_id FROM config WHERE config_id=1").fetchall()
         for cfg in cfg_rowset:
@@ -180,19 +195,21 @@ class AlarmDb:
         return self._config
 
     def save_config(self, cfg: Config):
-        # save config
+        # сохраняю все изменения
         cfg.set_last_update_time(QDateTime.currentDateTime())
         cmd = f"UPDATE config SET last_update_time={cfg.last_update_time}, pos_x={cfg.pos[0]}, pos_y={cfg.pos[1]}, pallette_id={cfg.pallette_id}, time_zone_id={cfg.timezone_id} WHERE config_id=1"
         cur = self._con.execute(cmd)
         self._con.commit()
 
     def delete_alarm(self, id: int):
+        # удаляю будильник из бд
         cmd = f"DELETE FROM alarm WHERE alarm_id={id}"
         cur = self._con.execute(cmd)
         self._con.commit()
         self.load_alarms()
 
     def add_alarm(self, alarm: Alarm):
+        # добавляю будильник в бд
         cmd_max_id = "SELECT MAX(alarm_id) FROM alarm"
         cur = self._con.execute(cmd_max_id).fetchall()
         max_id = cur[0][0] + 1
@@ -203,6 +220,7 @@ class AlarmDb:
         return max_id
 
     def update_alarm(self, alarm: Alarm):
+        # изменяю уже существующий будильник на тот, который я изменила
         cmd = f"UPDATE alarm SET alarm_time='{alarm.time}', alarm_type_id={alarm.type_id} WHERE alarm_id={alarm.id}"
         cur = self._con.execute(cmd)
         self._con.commit()
@@ -236,19 +254,19 @@ def test_db():
 
     a1_id = db.add_alarm(Alarm(0, "12:23:45", 1))
     a2_id = db.add_alarm(Alarm(0, "21:32:54", 2))
-    print(len(db.alarms)) # must be 4
+    print(len(db.alarms)) # должно быть 4
     print_alarms()    
 
     db.delete_alarm(a1_id)
-    print(len(db.alarms)) # must be 3
+    print(len(db.alarms)) # должно быть 3
     print_alarms()    
 
     db.update_alarm(Alarm(a2_id, "01:02:03", 1))
-    print(len(db.alarms)) # must be 3
+    print(len(db.alarms)) # должно быть 3
     print_alarms()    
 
     db.delete_alarm(a2_id)
-    print(len(db.alarms)) # must be 2
+    print(len(db.alarms)) # должно быть 2
     print_alarms()    
 
 if __name__ == "__main__": 
