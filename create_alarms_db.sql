@@ -12,7 +12,7 @@ CREATE TABLE time_zone(
 );
 
 DROP TABLE IF EXISTS config;
-CREATE TABLE config (
+CREATE TABLE config(
     config_id INT PRIMARY KEY,
     last_update_time INT NOT NULL,
     pos_x INT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE alarm_type(
 DROP TABLE IF EXISTS alarm;
 CREATE TABLE alarm (
     alarm_id INT PRIMARY KEY,
-    alarm_time INT NOT NULL,
+    alarm_time TEXT NOT NULL,
     alarm_type_id INT NOT NULL,
     FOREIGN KEY (alarm_type_id) 
       REFERENCES alarm_type(alarm_type_id) 
@@ -57,3 +57,6 @@ INSERT INTO time_zone(time_zone_id, time_zone_name) VALUES(2, 'local');
 
 INSERT INTO alarm_type(alarm_type_id, alarm_type_name) VALUES(1, 'once');
 INSERT INTO alarm_type(alarm_type_id, alarm_type_name) VALUES(2, 'daily');
+
+INSERT INTO alarm(alarm_id, alarm_time, alarm_type_id) VALUES(1, '06:30:00', 1);
+INSERT INTO alarm(alarm_id, alarm_time, alarm_type_id) VALUES(2, '08:00:00', 2);

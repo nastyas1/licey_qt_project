@@ -12,13 +12,13 @@
 
 База данных состоит из 5 связанных таблиц.
 
-`palette`
+`pallette`
 
-|name             |type|null    |constrains |
-|-----------------|----|--------|-----------|
-| palette_id      |int |not null|primary key|
-| palette_name    |text|not null|           |
-| content         |text|not null|           |
+|name              |type|null    |constraints| comment                         |
+|------------------|----|--------|-----------|---------------------------------|
+| pallette_id      |int |not null|primary key|
+| pallette_name    |text|not null|           |
+| content          |text|not null|           |
 
 
 `time_zone`
@@ -36,7 +36,7 @@
 | last_update_time|int |not null|           |
 | pos_x           |int |null    |           |
 | pos_y           |int |null    |           |
-| pallete_id      |int |not null|foreign key|
+| pallette_id     |int |not null|foreign key|
 | time_zone_id    |int |not null|foreign key|
 
 `alarm_type`
