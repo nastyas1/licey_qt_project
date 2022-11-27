@@ -55,5 +55,3 @@
 | alarm_type_id   |int |not null|foreign key|id типа будильника               |
 
 
-
-
