@@ -121,6 +121,8 @@ class AlarmDb:
         alarm_rowset = cur.execute("SELECT alarm_id, alarm_time, alarm_type_id FROM alarm").fetchall()
         for alarm in alarm_rowset:
             self._alarms[alarm[0]] = Alarm(alarm[0], alarm[1], alarm[2])
+        self._sorted_alarms = [(v.time_as_dt, v) for v in self._alarms.values()]
+        self._sorted_alarms.sort(key=lambda a: a[0])
 
     
     def load_data(self):
@@ -205,6 +207,11 @@ class AlarmDb:
         cur = self._con.execute(cmd)
         self._con.commit()
         self.load_alarms()
+
+    @property
+    def sorted_alarms(self) -> list[Alarm]:
+        return self._sorted_alarms
+
 
 
 def test_db():

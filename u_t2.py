@@ -100,7 +100,10 @@ class MyUnixAlarms(QDialog):
         self.display_alarm_list()
         self.all_alarms.setCurrentRow(row)
 
-
+    def refresh(self):
+        self._selected_alarm = 0
+        self.display_alarm_list()
+        self.all_alarms.setCurrentRow(0)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtMultimedia import *
 from db import *
 from u_t2 import *
 # первое, основное окно
@@ -10,6 +11,11 @@ class MyUnixClock(QMainWindow):
         self._db = AlarmDb('alarms.sqlite')
         self._bin_color = self._db.pallettes
         self._form = MyUnixAlarms(self._db)
+        self._msg_box = QMessageBox()
+        self._msg_box.setIcon(QMessageBox.Information)
+        self._msg_box.setWindowTitle("A L A R M")
+        self._msg_box.setStandardButtons(QMessageBox.Ok)
+        self._sound = QSound("sound/Alarm-ringtone.wav")
         self.initUI()
 
 
@@ -165,6 +171,7 @@ class MyUnixClock(QMainWindow):
         now_unix = now.currentSecsSinceEpoch()
         self.unix_time.display(now_unix)
         self.display_unix_bin(now_unix, self.bin_unix)
+        self.check_alarm_worked()
 
     def display_bin(self, val: int, where):
         bin_val = bin(val)[2:]  # удаляем начальные 0b
@@ -188,7 +195,30 @@ class MyUnixClock(QMainWindow):
         self.tz_choice = frmt_tm
 
     def on_alarm_btn_clicked(self):
+        self._form.refresh()
         self._form.show()
+
+    def check_alarm_worked(self):
+        now = QDateTime.currentDateTime()
+        for alarm_time, alarm in self._db.sorted_alarms:
+            if alarm_time > now:
+                break
+            self.signal_alarm(alarm)
+            if alarm.type_id == 1: # once
+                self._db.delete_alarm(alarm.id)
+            else: # daily
+                self._db.update_alarm(alarm)
+            self._form.close()
+
+
+    def signal_alarm(self, alarm: Alarm):
+        self._sound.play()
+        self._msg_box.setText(f"Weak up @ {alarm.time}")
+        self._msg_box.show()
+        self._msg_box.buttonClicked.connect(self.stop_playing)
+
+    def stop_playing(self):
+        self._sound.stop()
 
 
 if __name__ == '__main__':
