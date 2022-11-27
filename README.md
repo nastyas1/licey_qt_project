@@ -25,19 +25,19 @@
 
 |name             |type|null    |constrains | comment                         |
 |-----------------|----|--------|-----------|---------------------------------|
-| time_zone_id    |int |not null|primary key|id координированного времени     |
-| time_zone_name  |text|not null|           |название коорд. времени          |
+| time_zone_id    |int |not null|primary key|id часового пояса                |
+| time_zone_name  |text|not null|           |название часового пояса          |
 
 `config`
 
-|name             |type|null    |constrains | comment                         |
-|-----------------|----|--------|-----------|---------------------------------|
-| config_id       |int |not null|primary key|id config                        |
-| last_update_time|int |not null|           |последнее сохраненное изменение  |
-| pos_x           |int |null    |           |позиция на экране(х)             |
-| pos_y           |int |null    |           |позиция на экране(у)             |
-| pallette_id     |int |not null|foreign key|id палитры                       |
-| time_zone_id    |int |not null|foreign key|id координированного времени     |
+|name             |type|null    |constrains | comment                            |
+|-----------------|----|--------|-----------|------------------------------------|
+| config_id       |int |not null|primary key|id config(в единственном экземпляре)|
+| last_update_time|int |not null|           |последнее сохраненное изменение     |
+| pos_x           |int |null    |           |позиция на экране(х)                |
+| pos_y           |int |null    |           |позиция на экране(у)                |
+| pallette_id     |int |not null|foreign key|id палитры                          |
+| time_zone_id    |int |not null|foreign key|id часового пояса                   |
 
 `alarm_type`
 
