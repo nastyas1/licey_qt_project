@@ -2,13 +2,14 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from db import *
-
+from u_t2 import *
 # первое, основное окно
-class MyUnixClock(QWidget):
+class MyUnixClock(QMainWindow):
     def __init__(self):
         super().__init__()
         self._db = AlarmDb('alarms.sqlite')
         self._bin_color = self._db.pallettes
+        self._form = MyUnixAlarms(self._db)
         self.initUI()
 
 
@@ -127,6 +128,7 @@ class MyUnixClock(QWidget):
         self.alarm_button = QPushButton('alarm', self)
         self.alarm_button.move(480, 475)
         self.alarm_button.resize(100, 30)
+        self.alarm_button.clicked.connect(self.on_alarm_btn_clicked)
 
         self.second_timer = QTimer()
         self.second_timer.timeout.connect(self.on_second_timer)
@@ -184,6 +186,9 @@ class MyUnixClock(QWidget):
 
     def time_format_connection(self, frmt_tm):
         self.tz_choice = frmt_tm
+
+    def on_alarm_btn_clicked(self):
+        self._form.show()
 
 
 if __name__ == '__main__':

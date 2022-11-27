@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from db import *
 
-class MyUnixAlarms(QWidget):
+class MyUnixAlarms(QDialog):
     def __init__(self, db: AlarmDb):
         super().__init__()
         self._db = db
@@ -16,7 +16,7 @@ class MyUnixAlarms(QWidget):
         self.setGeometry(600, 600, 390, 331)
 
         self.all_alarms = QListWidget(self)
-        self.all_alarms.resize(171, 311)
+        self.all_alarms.resize(171, 261)
         self.all_alarms.move(10, 10)
         for alarm_id, alarm in self._db.alarms.items():
             item = QListWidgetItem()
@@ -39,13 +39,20 @@ class MyUnixAlarms(QWidget):
             al_rbtn.setText(alarm_type)
             self.alarm_type_radios.append(al_rbtn)
 
-        self.save_btn = QPushButton('save', self)
-        self.save_btn.resize(81, 41)
-        self.save_btn.move(200, 280)
+        self.add_btn = QPushButton('add', self)
+        self.add_btn.resize(81, 41)
+        self.add_btn.move(10, 280)
+        self.add_btn.clicked.connect(self.on_add_btn_clicked)
 
-        self.delete_btn = QPushButton('delete', self)
-        self.delete_btn.resize(81, 41)
-        self.delete_btn.move(300, 280)
+        self.del_btn = QPushButton('del', self)
+        self.del_btn.resize(81, 41)
+        self.del_btn.move(100, 280)
+        self.del_btn.clicked.connect(self.on_del_btn_clicked)
+
+        self.save_btn = QPushButton('save', self)
+        self.save_btn.resize(191, 41)
+        self.save_btn.move(190, 280)
+        self.save_btn.clicked.connect(self.on_save_btn_clicked)
         
         self.display_alarm()
 
@@ -58,6 +65,15 @@ class MyUnixAlarms(QWidget):
         self.time_edit.setTime(alarm.time_as_tm)
         self.alarm_type_radios[self._selected_alarm - 1].setChecked(True)
         
+    def on_del_btn_clicked(self):
+        ...
+
+    def on_add_btn_clicked(self):
+        ...
+    
+    def on_save_btn_clicked(self):
+        ...
+
         # con = sqlite3.connect('alarms.sqlite')
         # cur = con.cursor()
         # alarm_type_rowset = cur.execute("""SELECT alarm_type_id, alarm_type_name FROM alarm_type""").fetchall()
