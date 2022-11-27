@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 
 class Config:
     def __init__(self, last_update_time=0, pos_x=0, pos_y=0, pallette_id=1, time_zone_id=1) -> None:
+        self._id = 1
         self._last_update_time: int = last_update_time
         self._pos_x: int = pos_x
         self._pos_y: int = pos_y
@@ -12,8 +13,27 @@ class Config:
         self._time_zone_id: int = time_zone_id
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def last_update_time(self):
+        return self._last_update_time
+
+    @property
+    def last_update_time_as_dt(self):
+        return QDateTime.fromSecsSinceEpoch(self._last_update_time)
+
+    def set_last_update_time(self, when: QDateTime):
+        self._last_update_time = when.toSecsSinceEpoch()
+
+    @property
     def pos(self) -> Tuple[int, int]:
         return (self._pos_x, self._pos_y)
+
+    def set_pos(self, pos):
+        self._pos_x = pos.x()
+        self._pos_y = pos.y()
 
     @property
     def pallette_id(self) -> int:
@@ -39,8 +59,12 @@ class Alarm:
         return self._time
     
     @property
+    def time_as_tm(self) -> str:
+        return QTime.fromString(self._time, "hh:mm:ss")
+
+    @property
     def time_as_dt(self) -> QDateTime:
-        tm: QTime = QTime.fromString(self._time, "hh:mm:ss")
+        tm: QTime = self.time_as_tm
         now = QDateTime.currentDateTime()
         if now.time() > tm:
             return QDateTime(now.date().addDays(1)).addMSecs(tm.msecsSinceStartOfDay())
@@ -87,10 +111,10 @@ class AlarmDb:
         self._alarms: Dict[int, Alarm] = {}
         self._pallettes: Dict[str, Pallette] = {}
         self._time_zones: Dict[int, str] = {}
-        self._config: Union[Config, None]
-        self._load_data()
+        self._config: Config = Config()
+        self.load_data()
     
-    def _load_data(self):
+    def load_data(self):
         """
         s,fvg;ldfm;mg;dfnmbm"
         """
@@ -119,6 +143,10 @@ class AlarmDb:
             self._time_zones[tz[0]] = tz[1]
 
         # load config
+        cur = self._con.cursor()
+        cfg_rowset = cur.execute("SELECT config_id, last_update_time, pos_x, pos_y, pallette_id, time_zone_id FROM config WHERE config_id=1").fetchall()
+        for cfg in cfg_rowset:
+            self._config = Config(cfg[1], cfg[2], cfg[3], cfg[4], cfg[5])
 
     @property
     def alarm_type(self) -> Dict[int, str]:
@@ -136,8 +164,16 @@ class AlarmDb:
     def time_zones(self) -> Dict[int, str]:
         return self._time_zones
 
+    @property
+    def config(self) -> Config:
+        return self._config
 
-
+    def save_config(self, cfg: Config):
+        # save config
+        cfg.set_last_update_time(QDateTime.currentDateTime())
+        cmd = f"UPDATE config SET last_update_time={cfg.last_update_time}, pos_x={cfg.pos[0]}, pos_y={cfg.pos[1]}, pallette_id={cfg.pallette_id}, time_zone_id={cfg.timezone_id} WHERE config_id=1"
+        cur = self._con.execute(cmd)
+        self._con.commit()
 
 def test_db():
     al = [Alarm(1, "01:01:01", 1), Alarm(1, "21:34:56", 2)]
@@ -148,7 +184,13 @@ def test_db():
     print("pallettes:", ",".join([f"{name}={{{pal.id},{pal.colors}}}" for name, pal in db.pallettes.items()]))
     print("time_zones:", ",".join([f"{id}={name}" for id, name in db.time_zones.items()]))
     print("alarms:", ",".join([f"{id}={{{al.time_as_dt},{al.type_id}}}" for id, al in db.alarms.items()]))
-        
+    print(f"config: {db.config.id}={{{db.config.last_update_time_as_dt},{db.config.pos},pallette:{db.config.pallette_id},timezone:{db.config._time_zone_id}}}")
+    
+    cfg = Config()
+    cfg._pallette_id = 2
+    db.save_config(cfg)
+    db.load_data()
+    print(f"new config: {db.config.id}={{{db.config.last_update_time_as_dt},{db.config.pos},pallette:{db.config.pallette_id},timezone:{db.config._time_zone_id}}}")
 
 if __name__ == "__main__": 
     test_db()

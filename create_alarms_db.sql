@@ -61,3 +61,5 @@ INSERT INTO alarm_type(alarm_type_id, alarm_type_name) VALUES(2, 'daily');
 
 INSERT INTO alarm(alarm_id, alarm_time, alarm_type_id) VALUES(1, '06:30:00', 1);
 INSERT INTO alarm(alarm_id, alarm_time, alarm_type_id) VALUES(2, '08:00:00', 2);
+
+INSERT INTO config(config_id, last_update_time, pos_x, pos_y, pallette_id, time_zone_id) VALUES(1, 0, 0, 0, 1, 1);

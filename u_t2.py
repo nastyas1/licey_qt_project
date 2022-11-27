@@ -3,22 +3,23 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sqlite3
 
-class MyUnixClock(QWidget):
+class MyUnixAlarms(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle('alarm')
-        self.setGeometry(600, 600, 390, 355)
+        self.setGeometry(600, 600, 390, 331)
 
         self.all_alarms = QListWidget(self)
-        self.all_alarms.resize(171, 331)
+        self.all_alarms.resize(171, 311)
         self.all_alarms.move(10, 10)
 
-        self.time_alarm = QLineEdit(self)
-        self.time_alarm.resize(181, 51)
+        self.time_alarm = QTimeEdit(self)
+        self.time_alarm.resize(181, 45)
         self.time_alarm.move(200, 10)
+
 
         self.save = QPushButton('save', self)
         self.save.resize(81, 41)
@@ -87,6 +88,6 @@ class MyUnixClock(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = MyUnixClock()
+    ex = MyUnixAlarms()
     ex.show()
     sys.exit(app.exec())

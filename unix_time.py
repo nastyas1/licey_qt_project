@@ -22,7 +22,7 @@ class MyUnixClock(QWidget):
 
     def initUI(self):
         self.setWindowTitle('UNIX Time')
-        self.setGeometry(600, 600, 600, 520)
+        self.setGeometry(self._db.config.pos[0], self._db.config.pos[1], 600, 520)
 
         self.unix_time = QLCDNumber(self)
         self.unix_time.setNumDigits(10)
@@ -31,20 +31,19 @@ class MyUnixClock(QWidget):
         self.unix_time.setFrameShape(QFrame.Shape.Panel)
 
         self.time = QComboBox(self)
-        self.time.addItem('UTC')
-        self.time.addItem('local')
+        for tz_id, tz in self._db.time_zones.items():
+            self.time.addItem(tz)
         self.time.move(480, 17)
         self.time.resize(100, 30)
-        self.choise = 'UTC'
-
+        self.tz_choice = self._db.time_zones[self._db.config.timezone_id]
+        self.time.setCurrentText(self.tz_choice)
         self.time.activated[str].connect(self.time_format_connection)
 
-        self.clr = ""
         self.color = QComboBox(self)
         for k in self._bin_color.keys():
-            if len(self.clr) == 0:
-                self.clr = k
             self.color.addItem(k)
+            if self._bin_color[k].id == self._db.config.pallette_id:
+                self.current_pallette = k
         self.color.move(20, 17)
         self.color.resize(130, 30)
 
@@ -61,7 +60,7 @@ class MyUnixClock(QWidget):
                 btn.move(65 * x + 40, 55 * y + 75)
                 btn.resize(60, 50)
                 btn.setEnabled(False)
-                btn.setStyleSheet(self._bin_color[self.clr].colors[0])
+                btn.setStyleSheet(self._bin_color[self.current_pallette].colors[0])
                 self.bin_unix[-1].append(btn)
 
         self.hours = QLabel(self)
@@ -84,7 +83,7 @@ class MyUnixClock(QWidget):
                 btn.move(55 * x + 75, 50 * y + 320)
                 btn.resize(50, 45)
                 btn.setEnabled(False)
-                btn.setStyleSheet(self._bin_color[self.clr].colors[0])
+                btn.setStyleSheet(self._bin_color[self.current_pallette].colors[0])
                 self.bin_hhmmss[-1].append(btn)
         
         self.hh_label = QLabel(self)
@@ -132,13 +131,27 @@ class MyUnixClock(QWidget):
         self.second_timer = QTimer()
         self.second_timer.timeout.connect(self.on_second_timer)
         self.second_timer.start(1000)
+        
+
+    def closeEvent(self, event):
+        cfg = self._db.config
+        cfg.set_pos(self.geometry().topLeft())
+        cfg._pallette_id = self._db.pallettes[self.current_pallette].id
+        tz_choice = 1
+        for tz_id, tz in self._db.time_zones.items():
+            if self.tz_choice == tz:
+                tz_choice = tz_id
+                break
+        cfg._time_zone_id =   tz_choice
+        self._db.save_config(cfg)
+        event.accept()
 
     format_hhmmss = ["hh", "mm", "ss"]
     format_yyyymmdd = ["yyyy", "MM", "dd"]
     def on_second_timer(self):
-        if self.choise == 'UTC':
+        if self.tz_choice == 'UTC':
             now = QDateTime.currentDateTimeUtc() # перенести UTC и local в массив и вызывать по элементу
-        elif self.choise == 'local':
+        elif self.tz_choice == 'local':
             now = QDateTime.currentDateTime()
         for i in range(3):
             self.hhmmss[i].display(now.toString(MyUnixClock.format_hhmmss[i]))
@@ -156,7 +169,7 @@ class MyUnixClock(QWidget):
         while len(bin_val) < 6:
             bin_val = '0' + bin_val
         for i in range(len(bin_val) - 1, -1, -1):
-            where[i].setStyleSheet(self._bin_color[self.clr].colors[int(bin_val[i])])
+            where[i].setStyleSheet(self._bin_color[self.current_pallette].colors[int(bin_val[i])])
 
     def display_unix_bin(self, val: int, where):
         bin_val = bin(val)[2:]  # удаляем начальное 0b
@@ -164,13 +177,13 @@ class MyUnixClock(QWidget):
             bin_val = '0' + bin_val
         for row in range(3, -1, -1):
             for col in range(7, -1, -1):
-                where[row][col].setStyleSheet(self._bin_color[self.clr].colors[int(bin_val[row * 8 + col])])
+                where[row][col].setStyleSheet(self._bin_color[self.current_pallette].colors[int(bin_val[row * 8 + col])])
 
     def color_selection(self, clr):
-        self.clr = clr
+        self.current_pallette = clr
 
     def time_format_connection(self, frmt_tm):
-        self.choise = frmt_tm
+        self.tz_choice = frmt_tm
 
 
 if __name__ == '__main__':
