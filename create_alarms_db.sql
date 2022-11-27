@@ -2,7 +2,8 @@ DROP TABLE IF EXISTS pallette;
 CREATE TABLE pallette(
     pallette_id INT PRIMARY KEY,
     pallette_name TEXT NOT NULL,
-    content TEXT NOT NULL
+    true_color TEXT NOT NULL,
+    false_color TEXT NOT NULL
 );
 
 DROP TABLE IF EXISTS time_zone;
@@ -47,10 +48,10 @@ CREATE TABLE alarm (
          ON UPDATE NO ACTION
 );
 
-INSERT INTO pallette(pallette_id, pallette_name, content) VALUES(1, "warm sun", '["background-color : darkgrey", "background-color : yellow"]');
-INSERT INTO pallette(pallette_id, pallette_name, content) VALUES(2, "decorative rose", '["background-color : darkgrey", "background-color : darkred"]');
-INSERT INTO pallette(pallette_id, pallette_name, content) VALUES(3, "summer grass", '["background-color : darkgrey", "background-color : darkgreen"]');
-INSERT INTO pallette(pallette_id, pallette_name, content) VALUES(4, "winter morning", '["background-color : darkgrey", "background-color : darkblue"]');
+INSERT INTO pallette(pallette_id, pallette_name, false_color, true_color) VALUES(1, "warm sun", "background-color : darkgrey", "background-color : yellow");
+INSERT INTO pallette(pallette_id, pallette_name, false_color, true_color) VALUES(2, "decorative rose", "background-color : darkgrey", "background-color : darkred");
+INSERT INTO pallette(pallette_id, pallette_name, false_color, true_color) VALUES(3, "summer grass", "background-color : darkgrey", "background-color : darkgreen");
+INSERT INTO pallette(pallette_id, pallette_name, false_color, true_color) VALUES(4, "winter morning", "background-color : darkgrey", "background-color : darkblue");
 
 INSERT INTO time_zone(time_zone_id, time_zone_name) VALUES(1, 'UTC');
 INSERT INTO time_zone(time_zone_id, time_zone_name) VALUES(2, 'local');

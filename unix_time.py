@@ -1,21 +1,24 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from db import *
 
 # первое, основное окно
 class MyUnixClock(QWidget):
     def __init__(self):
         super().__init__()
+        self._db = AlarmDb('alarms.sqlite')
+        self._bin_color = self._db.pallettes
         self.initUI()
 
 
-    bin_color = {
-        "warm sun": ["background-color : darkgrey", "background-color : yellow"],
-        "decorative rose": ["background-color : darkgrey", "background-color : darkred"],
-        "summer grass": ["background-color : darkgrey", "background-color : darkgreen"],
-        "winter morning": ["background-color : darkgrey", "background-color : darkblue"]
-        }
-    # dict основных цветов, чтобы потом вызывать по ключу
+    # bin_color = {
+    #     "warm sun": ["background-color : darkgrey", "background-color : yellow"],
+    #     "decorative rose": ["background-color : darkgrey", "background-color : darkred"],
+    #     "summer grass": ["background-color : darkgrey", "background-color : darkgreen"],
+    #     "winter morning": ["background-color : darkgrey", "background-color : darkblue"]
+    #     }
+    # # dict основных цветов, чтобы потом вызывать по ключу
 
     def initUI(self):
         self.setWindowTitle('UNIX Time')
@@ -36,9 +39,11 @@ class MyUnixClock(QWidget):
 
         self.time.activated[str].connect(self.time_format_connection)
 
-        self.clr = "warm sun"
+        self.clr = ""
         self.color = QComboBox(self)
-        for k in MyUnixClock.bin_color.keys():
+        for k in self._bin_color.keys():
+            if len(self.clr) == 0:
+                self.clr = k
             self.color.addItem(k)
         self.color.move(20, 17)
         self.color.resize(130, 30)
@@ -56,7 +61,7 @@ class MyUnixClock(QWidget):
                 btn.move(65 * x + 40, 55 * y + 75)
                 btn.resize(60, 50)
                 btn.setEnabled(False)
-                btn.setStyleSheet(MyUnixClock.bin_color[self.clr][0])
+                btn.setStyleSheet(self._bin_color[self.clr].colors[0])
                 self.bin_unix[-1].append(btn)
 
         self.hours = QLabel(self)
@@ -79,7 +84,7 @@ class MyUnixClock(QWidget):
                 btn.move(55 * x + 75, 50 * y + 320)
                 btn.resize(50, 45)
                 btn.setEnabled(False)
-                btn.setStyleSheet(MyUnixClock.bin_color[self.clr][0])
+                btn.setStyleSheet(self._bin_color[self.clr].colors[0])
                 self.bin_hhmmss[-1].append(btn)
         
         self.hh_label = QLabel(self)
@@ -151,7 +156,7 @@ class MyUnixClock(QWidget):
         while len(bin_val) < 6:
             bin_val = '0' + bin_val
         for i in range(len(bin_val) - 1, -1, -1):
-            where[i].setStyleSheet(MyUnixClock.bin_color[self.clr][int(bin_val[i])])
+            where[i].setStyleSheet(self._bin_color[self.clr].colors[int(bin_val[i])])
 
     def display_unix_bin(self, val: int, where):
         bin_val = bin(val)[2:]  # удаляем начальное 0b
@@ -159,7 +164,7 @@ class MyUnixClock(QWidget):
             bin_val = '0' + bin_val
         for row in range(3, -1, -1):
             for col in range(7, -1, -1):
-                where[row][col].setStyleSheet(MyUnixClock.bin_color[self.clr][int(bin_val[row * 8 + col])])
+                where[row][col].setStyleSheet(self._bin_color[self.clr].colors[int(bin_val[row * 8 + col])])
 
     def color_selection(self, clr):
         self.clr = clr

@@ -53,10 +53,11 @@ class Alarm:
 
 
 class Pallette:
-    def __init__(self, id=0, name="", content="") -> None:
+    def __init__(self, id=0, name="", true_color="", false_color="") -> None:
         self._id = id
         self._name = name
-        self._content = content
+        self._true_color = true_color
+        self._false_color = false_color
 
     @property
     def id(self) -> int:
@@ -67,15 +68,24 @@ class Pallette:
         return self._id
 
     @property
-    def id(self):
-        return self._id
+    def true_color(self):
+        return self._true_color
+
+    @property
+    def false_color(self):
+        return self._false_color
+
+    @property
+    def colors(self):
+        return [self._false_color, self._true_color]
+
 
 class AlarmDb:
     def __init__(self, db_path='alarms.sqlite') -> None:
         self._con = sqlite3.connect(db_path)
         self._alarm_type: Dict[int, str] = {}
         self._alarms: Dict[int, Alarm] = {}
-        self._pallettes: Dict[int, Pallette] = {}
+        self._pallettes: Dict[str, Pallette] = {}
         self._time_zones: Dict[int, str] = {}
         self._config: Union[Config, None]
         self._load_data()
@@ -98,9 +108,9 @@ class AlarmDb:
 
         # load alarms
         cur = self._con.cursor()
-        pallette_rowset = cur.execute("SELECT pallette_id, pallette_name, content FROM pallette").fetchall()
+        pallette_rowset = cur.execute("SELECT pallette_id, pallette_name, true_color, false_color FROM pallette").fetchall()
         for pallette in pallette_rowset:
-            self._pallettes[pallette[0]] = Pallette(pallette[0], pallette[1], pallette[2])
+            self._pallettes[pallette[1]] = Pallette(pallette[0], pallette[1], pallette[2], pallette[3])
 
         # load time zones
         cur = self._con.cursor()
@@ -135,7 +145,7 @@ def test_db():
 
     db = AlarmDb()
     print("alarm types:", ",".join([f"{id}={name}" for id, name in db.alarm_type.items()]))
-    print("pallettes:", ",".join([f"{id}={{{pal.name},{pal._content}}}" for id, pal in db.pallettes.items()]))
+    print("pallettes:", ",".join([f"{name}={{{pal.id},{pal.colors}}}" for name, pal in db.pallettes.items()]))
     print("time_zones:", ",".join([f"{id}={name}" for id, name in db.time_zones.items()]))
     print("alarms:", ",".join([f"{id}={{{al.time_as_dt},{al.type_id}}}" for id, al in db.alarms.items()]))
         

@@ -28,16 +28,16 @@ class MyUnixClock(QWidget):
         self.delete.resize(81, 41)
         self.delete.move(300, 280)
         
-        con = sqlite3.connect('alarms.sqlite')
-        cur = con.cursor()
-        alarm_type_rowset = cur.execute("""SELECT alarm_type_id, alarm_type_name FROM alarm_type""").fetchall()
-        alarm_type_name = {}
-        for id_type in alarm_type_rowset:
-            alarm_type_name.append(id_type[0])
-            alarm_type_name[id_type[0]] = id_type[1]
+        # con = sqlite3.connect('alarms.sqlite')
+        # cur = con.cursor()
+        # alarm_type_rowset = cur.execute("""SELECT alarm_type_id, alarm_type_name FROM alarm_type""").fetchall()
+        # alarm_type_name = {}
+        # for id_type in alarm_type_rowset:
+        #     alarm_type_name.append(id_type[0])
+        #     alarm_type_name[id_type[0]] = id_type[1]
 
-        for id_and_type in range(len(alarm_type_name)):
-            self.chek_box = QCheckBox(f'{alarm_type_name[1]}', self)
+        # for id_and_type in range(len(alarm_type_name)):
+        #     self.chek_box = QCheckBox(f'{alarm_type_name[1]}', self)
             
 
 
@@ -61,8 +61,8 @@ class MyUnixClock(QWidget):
         # for bb in result_budilniki:
         #     budilniki.append(bb[0])
 
-        for id_type in alarm_type_rowset:
-            alarm_type_name.append(id_type[0])
+        # for id_type in alarm_type_rowset:
+        #     alarm_type_name.append(id_type[0])
         
         # for tt in range(3):    
         #     self.time = QLineEdit(self)
