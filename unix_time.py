@@ -173,7 +173,7 @@ class MyUnixClock(QMainWindow):
 
     def on_second_timer(self):
         """
-        инициализация времени
+        отображение времени
         """
         if self.tz_choice == 'UTC':
             now = QDateTime.currentDateTimeUtc() # нынешние дата и время в формате UTC
@@ -222,19 +222,19 @@ class MyUnixClock(QMainWindow):
 
     def color_selection(self, clr):
         """
-        инициализация выбранного цвет
+        выбор цвета
         """
         self.current_pallette = clr
 
     def time_format_connection(self, frmt_tm):
         """
-        инициализация выбранного времени
+        выбор времени
         """
         self.tz_choice = frmt_tm
 
     def on_alarm_btn_clicked(self):
         """
-        перезагрузка второй формы
+        загрузка формы с обновленными данными
         """
         self._form.refresh()
         self._form.show()
@@ -251,7 +251,7 @@ class MyUnixClock(QMainWindow):
             if alarm.type_id == 1:  # once
                 self._db.delete_alarm(alarm.id) # удалить после единичного срабатывания
             else:  # daily
-                self._db.update_alarm(alarm) # не удалять, а сохранять в бд
+                self._db.update_alarm(alarm) # не удалять, а сохранять в бд, чтобы он сработал на следующий день
             self._form.close()
 
 

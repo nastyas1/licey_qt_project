@@ -54,7 +54,8 @@ class MyUnixAlarms(QDialog):
 
     def on_all_alarms_changed(self, current: QListWidgetItem, previous: QListWidgetItem):
         """
-        если в бд существуют будильники, то я вывожу их на экран в QListWidget
+        если в бд существуют будильники, то я вывожу их на экран в QListWidget,
+        чтобы изменить информацию о будильнике при выборе в списке будильников
         """
         if current is not None:
             self._selected_alarm = current.data(1)
@@ -63,7 +64,7 @@ class MyUnixAlarms(QDialog):
         
     def display_alarm_list(self):
         """
-        при нажатии на будильник в QTimeEdit'e будет показываться этот будильник
+        при нажатии на будильник в QTimeEdit'e будет показываться список будильников
         """
         self.all_alarms.clear()
         for alarm_id, alarm in self._db.alarms.items():
@@ -78,7 +79,7 @@ class MyUnixAlarms(QDialog):
     
     def display_alarm(self):
         """
-        передаю данные из бд, то есть указанные данные(once/daily).
+        передаю данные из бд, то есть указанные данные(once/daily) и его время.
         то есть при нажатии на будильник я так же буду видеть, 
         установлен этот будильник единично или каждый день
         """
@@ -134,7 +135,7 @@ class MyUnixAlarms(QDialog):
     def refresh(self):
         """
         чтобы при закрытии формы alarms и повторном открытии программа не заканчивалась
-        я обнуляю прошлые данные
+        я удаляю прошлые данные и обновляю данные в форме
         """
         self._selected_alarm = 0
         self.display_alarm_list()

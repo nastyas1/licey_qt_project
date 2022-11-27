@@ -91,22 +91,22 @@ class Alarm:
     @property
     def time(self) -> str:
         """
-        возвращает время будильника
+        возвращает время будильника как строку
         """
         return self._time
     
     @property
     def time_as_tm(self) -> str:
         """
-        перевод времени в правильный формат "hh:mm:ss"
+        перевод времени QTime из формата "hh:mm:ss"
         """
         return QTime.fromString(self._time, "hh:mm:ss")
 
     @property
     def time_as_dt(self) -> QDateTime:
         """
-        в зависимости от того, ставлю я будильник на завтра или же на сегодня
-        я записываю время и дату будильника
+        в зависимости от текущего времени, ставлю я будильник на завтра или же на сегодня
+        я возвращаю время и дату будильника
         """
         tm: QTime = self.time_as_tm
         now = QDateTime.currentDateTime()
@@ -173,7 +173,7 @@ class Pallette:
 class AlarmDb:
     """
     возвращает из базы данных переменные, указанные в init в нужном формате,
-    так же тут я указываю изначальную базу данных
+    так же тут я указываю изначальную базу данных, config хранится всегда с 1й id=1
     """
     def __init__(self, db_path='alarms.sqlite') -> None:
         self._con = sqlite3.connect(db_path)
@@ -262,7 +262,7 @@ class AlarmDb:
     @property
     def config(self) -> Config:
         """
-        возвращает объект класса Config
+        возвращает объект класса Config, который хранится в одном экземпляре с id=1
         """
         return self._config
 
@@ -309,7 +309,7 @@ class AlarmDb:
     @property
     def sorted_alarms(self) -> list[Alarm]:
         """
-        возвращает сортированные по времени список будильников
+        возвращает сортированные по времени список из пар(время срабатывания с датой, будильник)
         """
         return self._sorted_alarms
 

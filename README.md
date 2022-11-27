@@ -16,43 +16,43 @@
 
 |name              |type|null    |constraints| comment                         |
 |------------------|----|--------|-----------|---------------------------------|
-| pallette_id      |int |not null|primary key|
-| pallette_name    |text|not null|           |
-| content          |text|not null|           |
+| pallette_id      |int |not null|primary key|id палитры                       |
+| pallette_name    |text|not null|           |название списка цветов           |
+| content          |text|not null|           |список цветов                    |
 
 
 `time_zone`
 
-|name             |type|null    |constrains |
-|-----------------|----|--------|-----------|
-| time_zone_id    |int |not null|primary key|
-| time_zone_name  |text|not null|           |
+|name             |type|null    |constrains | comment                         |
+|-----------------|----|--------|-----------|---------------------------------|
+| time_zone_id    |int |not null|primary key|id координированного времени     |
+| time_zone_name  |text|not null|           |название коорд. времени          |
 
 `config`
 
-|name             |type|null    |constrains |
-|-----------------|----|--------|-----------|
-| config_id       |int |not null|primary key|
-| last_update_time|int |not null|           |
-| pos_x           |int |null    |           |
-| pos_y           |int |null    |           |
-| pallette_id     |int |not null|foreign key|
-| time_zone_id    |int |not null|foreign key|
+|name             |type|null    |constrains | comment                         |
+|-----------------|----|--------|-----------|---------------------------------|
+| config_id       |int |not null|primary key|id config                        |
+| last_update_time|int |not null|           |последнее сохраненное изменение  |
+| pos_x           |int |null    |           |позиция на экране(х)             |
+| pos_y           |int |null    |           |позиция на экране(у)             |
+| pallette_id     |int |not null|foreign key|id палитры                       |
+| time_zone_id    |int |not null|foreign key|id координированного времени     |
 
 `alarm_type`
 
-|name             |type|null    |constrains |
-|-----------------|----|--------|-----------|
-| alarm_type_id   |int |not null|primary key|
-| alarm_type_name |text|not null|           |
+|name             |type|null    |constrains | comment                            |
+|-----------------|----|--------|-----------|------------------------------------|
+| alarm_type_id   |int |not null|primary key|id типа будильника                  |
+| alarm_type_name |text|not null|           |название типа будильника(once/daily)|
 
 `alarm`
 
-|name             |type|null    |constrains |
-|-----------------|----|--------|-----------|
-| alarm_id        |int |not null|primary key|
-| alarm_time      |int |not null|           |
-| alarm_type_id   |int |not null|foreign key|
+|name             |type|null    |constrains | comment                         |
+|-----------------|----|--------|-----------|---------------------------------|
+| alarm_id        |int |not null|primary key|id будильника                    |
+| alarm_time      |int |not null|           |время будильника                 |
+| alarm_type_id   |int |not null|foreign key|id типа будильника               |
 
 
 
