@@ -1,12 +1,15 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import sqlite3
+from db import *
 
 class MyUnixAlarms(QWidget):
-    def __init__(self):
+    def __init__(self, db: AlarmDb):
         super().__init__()
+        self._db = db
+        self._selected_alarm = 1
         self.initUI()
+
 
     def initUI(self):
         self.setWindowTitle('alarm')
@@ -15,19 +18,45 @@ class MyUnixAlarms(QWidget):
         self.all_alarms = QListWidget(self)
         self.all_alarms.resize(171, 311)
         self.all_alarms.move(10, 10)
+        for alarm_id, alarm in self._db.alarms.items():
+            item = QListWidgetItem()
+            item.setData(1, alarm_id)
+            item.setText(alarm.time)
+            self.all_alarms.addItem(item)
+        self.all_alarms.currentItemChanged.connect(self.on_all_alarms_changed)
+        self._selected_alarm = 1
 
-        self.time_alarm = QTimeEdit(self)
-        self.time_alarm.resize(181, 45)
-        self.time_alarm.move(200, 10)
+        self.time_edit = QTimeEdit(self)
+        self.time_edit.setDisplayFormat('hh:mm:ss')
+        self.time_edit.resize(181, 45)
+        self.time_edit.move(200, 10)
 
+        self.alarm_type_radios = []
+        for alarm_type_id, alarm_type in self._db.alarm_type.items():
+            al_rbtn = QRadioButton(self)
+            al_rbtn.resize(161, 31)
+            al_rbtn.move(200, 80 + 31 * (alarm_type_id - 1))
+            al_rbtn.setText(alarm_type)
+            self.alarm_type_radios.append(al_rbtn)
 
-        self.save = QPushButton('save', self)
-        self.save.resize(81, 41)
-        self.save.move(200, 280)
+        self.save_btn = QPushButton('save', self)
+        self.save_btn.resize(81, 41)
+        self.save_btn.move(200, 280)
 
-        self.delete = QPushButton('delete', self)
-        self.delete.resize(81, 41)
-        self.delete.move(300, 280)
+        self.delete_btn = QPushButton('delete', self)
+        self.delete_btn.resize(81, 41)
+        self.delete_btn.move(300, 280)
+        
+        self.display_alarm()
+
+    def on_all_alarms_changed(self, current: QListWidgetItem, prevous: QListWidgetItem):
+        self._selected_alarm = current.data(1)
+        self.display_alarm()
+        
+    def display_alarm(self):
+        alarm = self._db.alarms[self._selected_alarm]
+        self.time_edit.setTime(alarm.time_as_tm)
+        self.alarm_type_radios[self._selected_alarm - 1].setChecked(True)
         
         # con = sqlite3.connect('alarms.sqlite')
         # cur = con.cursor()
@@ -88,6 +117,6 @@ class MyUnixAlarms(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = MyUnixAlarms()
+    ex = MyUnixAlarms(AlarmDb())
     ex.show()
     sys.exit(app.exec())
