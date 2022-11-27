@@ -114,21 +114,28 @@ class AlarmDb:
         self._config: Config = Config()
         self.load_data()
     
-    def load_data(self):
-        """
-        s,fvg;ldfm;mg;dfnmbm"
-        """
-        # load alarm types
-        cur = self._con.cursor()
-        alarm_type_rowset = cur.execute("SELECT alarm_type_id, alarm_type_name FROM alarm_type").fetchall()
-        for alarm_type in alarm_type_rowset:
-            self._alarm_type[alarm_type[0]] = alarm_type[1]
-
+    def load_alarms(self):
+        self._alarms.clear()
         # load alarms
         cur = self._con.cursor()
         alarm_rowset = cur.execute("SELECT alarm_id, alarm_time, alarm_type_id FROM alarm").fetchall()
         for alarm in alarm_rowset:
             self._alarms[alarm[0]] = Alarm(alarm[0], alarm[1], alarm[2])
+
+    
+    def load_data(self):
+        """
+        s,fvg;ldfm;mg;dfnmbm"
+        """
+        self._alarm_type.clear()
+        self._pallettes.clear()
+        self._time_zones.clear()
+
+        # load alarm types
+        cur = self._con.cursor()
+        alarm_type_rowset = cur.execute("SELECT alarm_type_id, alarm_type_name FROM alarm_type").fetchall()
+        for alarm_type in alarm_type_rowset:
+            self._alarm_type[alarm_type[0]] = alarm_type[1]
 
         # load alarms
         cur = self._con.cursor()
@@ -147,6 +154,8 @@ class AlarmDb:
         cfg_rowset = cur.execute("SELECT config_id, last_update_time, pos_x, pos_y, pallette_id, time_zone_id FROM config WHERE config_id=1").fetchall()
         for cfg in cfg_rowset:
             self._config = Config(cfg[1], cfg[2], cfg[3], cfg[4], cfg[5])
+
+        self.load_alarms()
 
     @property
     def alarm_type(self) -> Dict[int, str]:
@@ -175,7 +184,33 @@ class AlarmDb:
         cur = self._con.execute(cmd)
         self._con.commit()
 
+    def delete_alarm(self, id: int):
+        cmd = f"DELETE FROM alarm WHERE alarm_id={id}"
+        cur = self._con.execute(cmd)
+        self._con.commit()
+        self.load_alarms()
+
+    def add_alarm(self, alarm: Alarm):
+        cmd_max_id = "SELECT MAX(alarm_id) FROM alarm"
+        cur = self._con.execute(cmd_max_id).fetchall()
+        max_id = cur[0][0] + 1
+        cmd = f"INSERT INTO alarm(alarm_id, alarm_time, alarm_type_id) VALUES({max_id},'{alarm.time}',{alarm.type_id})"
+        cur = self._con.execute(cmd)
+        self._con.commit()
+        self.load_alarms()
+        return max_id
+
+    def update_alarm(self, alarm: Alarm):
+        cmd = f"UPDATE alarm SET alarm_time='{alarm.time}', alarm_type_id={alarm.type_id} WHERE alarm_id={alarm.id}"
+        cur = self._con.execute(cmd)
+        self._con.commit()
+        self.load_alarms()
+
+
 def test_db():
+    def print_alarms():
+        print("alarms:", ",".join([f"{id}={{{al.time_as_dt},{al.type_id}}}" for id, al in db.alarms.items()]))
+
     al = [Alarm(1, "01:01:01", 1), Alarm(1, "21:34:56", 2)]
     print("test alarm:", ",".join([f"{a.id}={a.time_as_dt}({a.time})" for a in al]))
 
@@ -183,14 +218,31 @@ def test_db():
     print("alarm types:", ",".join([f"{id}={name}" for id, name in db.alarm_type.items()]))
     print("pallettes:", ",".join([f"{name}={{{pal.id},{pal.colors}}}" for name, pal in db.pallettes.items()]))
     print("time_zones:", ",".join([f"{id}={name}" for id, name in db.time_zones.items()]))
-    print("alarms:", ",".join([f"{id}={{{al.time_as_dt},{al.type_id}}}" for id, al in db.alarms.items()]))
     print(f"config: {db.config.id}={{{db.config.last_update_time_as_dt},{db.config.pos},pallette:{db.config.pallette_id},timezone:{db.config._time_zone_id}}}")
-    
+    print_alarms()    
+
     cfg = Config()
     cfg._pallette_id = 2
     db.save_config(cfg)
     db.load_data()
-    print(f"new config: {db.config.id}={{{db.config.last_update_time_as_dt},{db.config.pos},pallette:{db.config.pallette_id},timezone:{db.config._time_zone_id}}}")
+    print_alarms()    
+
+    a1_id = db.add_alarm(Alarm(0, "12:23:45", 1))
+    a2_id = db.add_alarm(Alarm(0, "21:32:54", 2))
+    print(len(db.alarms)) # must be 4
+    print_alarms()    
+
+    db.delete_alarm(a1_id)
+    print(len(db.alarms)) # must be 3
+    print_alarms()    
+
+    db.update_alarm(Alarm(a2_id, "01:02:03", 1))
+    print(len(db.alarms)) # must be 3
+    print_alarms()    
+
+    db.delete_alarm(a2_id)
+    print(len(db.alarms)) # must be 2
+    print_alarms()    
 
 if __name__ == "__main__": 
     test_db()
