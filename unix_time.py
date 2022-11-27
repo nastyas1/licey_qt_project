@@ -27,11 +27,9 @@ class MyUnixClock(QMainWindow):
         self.setWindowTitle('UNIX Time')
         self.setGeometry(
             self._db.config.pos[0], self._db.config.pos[1], 600, 520)
-        """
-        изначально беру позицию x и y из бд,
-        то есть при закрытии программы и повторном открытии окно будет на том месте,
-        где его закрыли в прошлый раз. Это происходит за счет того, что я сохраняю в бд(config) позицию формы
-        """
+        # изначально беру позицию x и y из бд,
+        # то есть при закрытии программы и повторном открытии окно будет на том месте,
+        # где его закрыли в прошлый раз. Это происходит за счет того, что я сохраняю в бд(config) позицию формы
         self.unix_time = QLCDNumber(self)
         self.unix_time.setNumDigits(10)
         self.unix_time.move(245, 20)
@@ -46,11 +44,9 @@ class MyUnixClock(QMainWindow):
         self.tz_choice = self._db.time_zones[self._db.config.timezone_id]
         self.time.setCurrentText(self.tz_choice)
         self.time.activated[str].connect(self.time_format_connection)
-        """
-        здесь так же работа с бд. Я беру значения из time_zones,
-        в моем случае это utc и local, так как это работа с бд,
-        то это означает, что при закрытии программы все изменения сохраняться
-        """
+        # здесь так же работа с бд. Я беру значения из time_zones,
+        # в моем случае это utc и local, так как это работа с бд,
+        # то это означает, что при закрытии программы все изменения сохраняться
         self.color = QComboBox(self)
         for name_color in self._bin_color.keys():
             self.color.addItem(name_color)
@@ -59,12 +55,10 @@ class MyUnixClock(QMainWindow):
         self.color.move(20, 17)
         self.color.resize(130, 30)
         self.color.activated[str].connect(self.color_selection)
-        """
-        Идентично тому, что и с time_zones, только тут я беру значения цветов из бд,
-        присваивая list цветов к ключу названий цветов(то, что будет отображаться в combobox'e),
-        то есть теперь у меня dict цветов, который так же храниться в бд
-        и будет сохраняться при закрытии программы
-        """
+        # Идентично тому, что и с time_zones, только тут я беру значения цветов из бд,
+        # присваивая list цветов к ключу названий цветов(то, что будет отображаться в combobox'e),
+        # то есть теперь у меня dict цветов, который так же храниться в бд
+        # и будет сохраняться при закрытии программы
         self.bin_unix = []
         for col in range(4):
             self.bin_unix.append([])
@@ -76,10 +70,8 @@ class MyUnixClock(QMainWindow):
                 normal_time_btn.setStyleSheet(
                     self._bin_color[self.current_pallette].colors[0])
                 self.bin_unix[-1].append(normal_time_btn)
-        """
-        создаю в цикле 32 кнопки, по 4 кнопки в высоту и 8 кнопок в ширину.
-        так же задаю изначальный цвет
-        """
+        # создаю в цикле 32 кнопки, по 4 кнопки в высоту и 8 кнопок в ширину.
+        # так же задаю изначальный цвет
 
         self.hours = QLabel(self)
         self.hours.setText('hours')
@@ -104,10 +96,8 @@ class MyUnixClock(QMainWindow):
                 normal_time_btn.setStyleSheet(
                     self._bin_color[self.current_pallette].colors[0])
                 self.bin_hhmmss[-1].append(normal_time_btn)
-        """
-        создаю 18 кнопок, 3 в высоту и 6 в длину.
-        так же задаю им цвет
-        """
+        # создаю 18 кнопок, 3 в высоту и 6 в длину.
+        # так же задаю им цвет
 
         self.hh_label = QLabel(self)
         self.hh_label.setText('h')
@@ -158,12 +148,13 @@ class MyUnixClock(QMainWindow):
         self.second_timer = QTimer()
         self.second_timer.timeout.connect(self.on_second_timer)
         self.second_timer.start(1000)
-        """
-        добавляю QTimer, по сути обновляя каждую секунду форму,
-        чтобы время отсчитывалось по секундам
-        """
+        # добавляю QTimer, по сути обновляя каждую секунду форму,
+        # чтобы время отсчитывалось по секундам
 
     def closeEvent(self, event):
+        """
+        при повторном запуске программы все изменения сохраняться
+        """
         cfg = self._db.config
         cfg.set_pos(self.geometry().topLeft())
         cfg._pallette_id = self._db.pallettes[self.current_pallette].id
@@ -175,14 +166,15 @@ class MyUnixClock(QMainWindow):
         cfg._time_zone_id = tz_choice
         self._db.save_config(cfg)
         event.accept()
-        """
-        задаю все элементы, чтобы при повторном запуске программы все изменения были оставлены
-        """
+        
 
     format_hhmmss = ["hh", "mm", "ss"]
     format_yyyymmdd = ["yyyy", "MM", "dd"]
 
     def on_second_timer(self):
+        """
+        инициализация времени
+        """
         if self.tz_choice == 'UTC':
             now = QDateTime.currentDateTimeUtc() # нынешние дата и время в формате UTC
         elif self.tz_choice == 'local':
@@ -204,18 +196,22 @@ class MyUnixClock(QMainWindow):
         self.check_alarm_worked()
 
     def display_bin(self, val: int, where):
+        """
+        преобразую время в бинарный формат и в зависимости от того,
+        0 или 1 мне встречаются окрашиваю левую нижнюю таблицу QPushButton'ов в два цвета
+        """
         bin_val = bin(val)[2:]  # удаляю начальные 0b
         while len(bin_val) < 6:
             bin_val = '0' + bin_val
         for i in range(len(bin_val) - 1, -1, -1):
             where[i].setStyleSheet(
                 self._bin_color[self.current_pallette].colors[int(bin_val[i])])
-    """
-    преобразую время в бинарный формат и в зависимости от того,
-    0 или 1 мне встречается окрашиваю левую нижнюю таблицу QPushButton'ов в два цвета
-    """
-
+    
     def display_unix_bin(self, val: int, where):
+        """
+        преобразую количество секунд с 1970 года в бинарный вид и в зависимости от того,
+        0 или 1 мне встречается окрашиваю таблицу QPushButton'ов по центру в два цвета
+        """
         bin_val = bin(val)[2:]  # удаляю начальное 0b
         while len(bin_val) < 32:
             bin_val = '0' + bin_val
@@ -223,22 +219,30 @@ class MyUnixClock(QMainWindow):
             for col in range(7, -1, -1):
                 where[row][col].setStyleSheet(
                     self._bin_color[self.current_pallette].colors[int(bin_val[row * 8 + col])])
-    """
-    преобразую количество секунд с 1970 года в бинарный вид и в зависимости от того,
-    0 или 1 мне встречается окрашиваю таблицу QPushButton'ов по центру в два цвета
-    """
 
     def color_selection(self, clr):
+        """
+        инициализация выбранного цвет
+        """
         self.current_pallette = clr
 
     def time_format_connection(self, frmt_tm):
+        """
+        инициализация выбранного времени
+        """
         self.tz_choice = frmt_tm
 
     def on_alarm_btn_clicked(self):
+        """
+        перезагрузка второй формы
+        """
         self._form.refresh()
         self._form.show()
 
     def check_alarm_worked(self):
+        """
+        в зависимости от того, выбран once/daily будильник, либо удаляется, либо сохраняется после проигрывания
+        """
         now = QDateTime.currentDateTime()
         for alarm_time, alarm in self._db.sorted_alarms:
             if alarm_time > now:
@@ -249,21 +253,23 @@ class MyUnixClock(QMainWindow):
             else:  # daily
                 self._db.update_alarm(alarm) # не удалять, а сохранять в бд
             self._form.close()
-        """
-        в зависимости от того, выбран once/daily я, либо удаляю, либо сохраняю будильник в бд
-        """
+
 
     def signal_alarm(self, alarm: Alarm):
-        self._sound.play()
-        self._msg_box.setText(f"Wake up @ {alarm.time}")
-        self._msg_box.show()
-        self._msg_box.buttonClicked.connect(self.stop_playing)
         """
         при срабатывании будильника открывается форма и начинает звенеть будильник,
         так же, при закрытии формы будильник перестает звенеть
         """
+        self._sound.play()
+        self._msg_box.setText(f"Wake up @ {alarm.time}")
+        self._msg_box.show()
+        self._msg_box.buttonClicked.connect(self.stop_playing)
+        
 
     def stop_playing(self):
+        """
+        прекращение звонка будильника
+        """
         self._sound.stop()
 
 

@@ -53,12 +53,18 @@ class MyUnixAlarms(QDialog):
 
 
     def on_all_alarms_changed(self, current: QListWidgetItem, previous: QListWidgetItem):
+        """
+        если в бд существуют будильники, то я вывожу их на экран в QListWidget
+        """
         if current is not None:
             self._selected_alarm = current.data(1)
             self.display_alarm()
-    # если в бд существуют будильники, то я вывожу их на экран в QListWidget
+
         
     def display_alarm_list(self):
+        """
+        при нажатии на будильник в QTimeEdit'e будет показываться этот будильник
+        """
         self.all_alarms.clear()
         for alarm_id, alarm in self._db.alarms.items():
             if self._selected_alarm == 0:
@@ -68,31 +74,36 @@ class MyUnixAlarms(QDialog):
             item.setText(alarm.time)
             self.all_alarms.addItem(item)
         self.display_alarm()
-    # при нажатии на будильник в QTimeEdit'e будет показываться этот будильник
+
     
     def display_alarm(self):
+        """
+        передаю данные из бд, то есть указанные данные(once/daily).
+        то есть при нажатии на будильник я так же буду видеть, 
+        установлен этот будильник единично или каждый день
+        """
         alarm = self._db.alarms[self._selected_alarm]
         self.time_edit.setTime(alarm.time_as_tm)
         self.alarm_type_radios[alarm.type_id - 1].setChecked(True)
-    """
-    передаю данные из бд, то есть указанные данные(once/daily).
-    то есть при нажатии на будильник я так же буду видеть, 
-    установлен этот будильник единично или каждый день
-    """
+    
         
     def on_del_btn_clicked(self):
+        """
+        будильник удаляется при нажатии на кнопку del.
+        если будильник был в конце, то мы переходим на будильник, стоящий выше,
+        если в середине, то переходим на будильник, стоящий ниже
+        """
         row = self.all_alarms.currentRow()
         self._db.delete_alarm(self._selected_alarm)
         self._selected_alarm = 0
         self.display_alarm_list()
         self.all_alarms.setCurrentRow(row if row < len(self._db.alarms) else len(self._db.alarms) - 1)
-    """
-    удаляю будильник при нажатии на кнопку del.
-    если будильник был в конце, то мы переходим на будильник, стоящий выше,
-    если в середине, то переходим на будильник, стоящий ниже
-    """
+    
 
     def on_add_btn_clicked(self):
+        """
+        добавляется будильник, он добавляется в самый конец
+        """
         tm = self.time_edit.time().toString("hh:mm:ss")
         for i in range(len(self.alarm_type_radios)):
             if self.alarm_type_radios[i].isChecked():
@@ -101,9 +112,14 @@ class MyUnixAlarms(QDialog):
         alarm_idx = self._db.add_alarm(Alarm(0, tm, alarm_type_id + 1))
         self.display_alarm_list()
         self.all_alarms.setCurrentRow(len(self._db.alarms) - 1)
-    # добавляю будильник, он добавляется в самый конец
+
     
     def on_save_btn_clicked(self):
+        """
+        сохраняю будильник в базу данных, при нажатии на кнопку save,
+        то есть я могу изменять будильники и измененные будильники будут хранится в бд,
+        а изначальные, которые я изменяла, будут удалены из бд
+        """
         row = self.all_alarms.currentRow()
         tm = self.time_edit.time().toString("hh:mm:ss")
         for i in range(len(self.alarm_type_radios)):
@@ -113,20 +129,17 @@ class MyUnixAlarms(QDialog):
         self._db.update_alarm(Alarm(self._db.alarms[self._selected_alarm].id, tm, alarm_type_id))
         self.display_alarm_list()
         self.all_alarms.setCurrentRow(row)
-    """
-    сохраняю будильник в базу данных, при нажатии на кнопку save,
-    то есть я могу изменять будильники и измененные будильники будут хранится в бд,
-    а изначальные, которые я изменяла, будут удалены из бд
-    """
+    
 
     def refresh(self):
+        """
+        чтобы при закрытии формы alarms и повторном открытии программа не заканчивалась
+        я обнуляю прошлые данные
+        """
         self._selected_alarm = 0
         self.display_alarm_list()
         self.all_alarms.setCurrentRow(0)
-    """
-    чтобы при закрытии формы alarms и повторном открытии программа не заканчивалась
-    я обнуляю прошлые данные
-    """
+    
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

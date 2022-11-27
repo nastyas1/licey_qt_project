@@ -17,34 +17,58 @@ class Config:
 
     @property # использую property, чтобы потом не писать скобки
     def id(self) -> int:
+        """
+        возвращает id
+        """
         return self._id
 
     @property
     def last_update_time(self):
+        """
+        возвращает последнее добавленное время
+        """
         return self._last_update_time
 
     @property
     def last_update_time_as_dt(self):
+        """
+        обновляю дату и время
+        """
         return QDateTime.fromSecsSinceEpoch(self._last_update_time)
-    # обновляю дату и время
+
 
     def set_last_update_time(self, when: QDateTime):
+        """
+        перевод в unix time
+        """
         self._last_update_time = when.toSecsSinceEpoch()
 
     @property
     def pos(self) -> Tuple[int, int]:
+        """
+        сохранение позиции формы в бд
+        """
         return (self._pos_x, self._pos_y)
 
     def set_pos(self, pos):
+        """
+        позиция формы
+        """
         self._pos_x = pos.x()
         self._pos_y = pos.y()
 
     @property
     def pallette_id(self) -> int:
+        """
+        возвращает id палитры
+        """
         return self._pallette_id
 
     @property
     def timezone_id(self) -> int:
+        """
+        возвращает id time_zone, то есть id utc/local
+        """
         return self._time_zone_id
 
 
@@ -59,31 +83,44 @@ class Alarm:
 
     @property
     def id(self) -> int:
+        """
+        возвращает id будильника
+        """
         return self._id
 
     @property
     def time(self) -> str:
+        """
+        возвращает время будильника
+        """
         return self._time
     
     @property
     def time_as_tm(self) -> str:
+        """
+        перевод времени в правильный формат "hh:mm:ss"
+        """
         return QTime.fromString(self._time, "hh:mm:ss")
 
     @property
     def time_as_dt(self) -> QDateTime:
+        """
+        в зависимости от того, ставлю я будильник на завтра или же на сегодня
+        я записываю время и дату будильника
+        """
         tm: QTime = self.time_as_tm
         now = QDateTime.currentDateTime()
         if now.time() > tm: # если нынешнее время позже поставленного будильника я добавляю день
             return QDateTime(now.date().addDays(1)).addMSecs(tm.msecsSinceStartOfDay())
         else: # если нет, то рассчитываю колво милисекунд до будильника
             return QDateTime(now.date()).addMSecs(tm.msecsSinceStartOfDay())
-    """
-    в зависимости от того, ставлю я будильник на завтра или же на сегодня
-    я записываю время и дату будильника
-    """
+
 
     @property
     def type_id(self) -> int:
+        """
+        возвращает id типа указанного времени в формате int
+        """
         return self._type_id
 
 
@@ -99,22 +136,37 @@ class Pallette:
 
     @property
     def id(self) -> int:
+        """
+        возвращает id цвета в формате int
+        """
         return self._id
 
     @property
     def name(self):
+        """
+        возвращает название цвета
+        """
         return self._id
 
     @property
     def true_color(self):
+        """
+        возвращает цвет, который окрашивает кнопки, которые инициализируются как "1"
+        """
         return self._true_color
 
     @property
     def false_color(self):
+        """
+        возвращает цвет, который окрашивает кнопки, которые инициализируются как "0"
+        """
         return self._false_color
 
     @property
     def colors(self):
+        """
+        возвращает list цветов
+        """
         return [self._false_color, self._true_color]
 
 
@@ -133,8 +185,10 @@ class AlarmDb:
         self.load_data()
     
     def load_alarms(self):
+        """
+        загружаю из бд все, что понадобилось для будильника
+        """
         self._alarms.clear()
-        # загружаю из бд все, что понадобилось для будильника
         cur = self._con.cursor()
         alarm_rowset = cur.execute("SELECT alarm_id, alarm_time, alarm_type_id FROM alarm").fetchall()
         for alarm in alarm_rowset:
@@ -144,6 +198,9 @@ class AlarmDb:
 
     
     def load_data(self):
+        """
+        загрузка различных значений из бд
+        """
         self._alarm_type.clear()
         self._pallettes.clear()
         self._time_zones.clear()
@@ -176,40 +233,61 @@ class AlarmDb:
 
     @property
     def alarm_type(self) -> Dict[int, str]:
+        """
+        возвращает библиотеку с индексом и типом будильника(once/daily)
+        """
         return self._alarm_type
 
     @property
     def alarms(self) -> Dict[int, Alarm]:
+        """
+        возвращает библиотеку с индексом и временем будильника
+        """
         return self._alarms
 
     @property
     def pallettes(self) -> Dict[int, Pallette]:
+        """
+        возвращает библиотеку с индексом и временем будильника
+        """
         return self._pallettes
 
     @property
     def time_zones(self) -> Dict[int, str]:
+        """
+        возвращает библиотеку с индексом и типом времени(utc/local)
+        """
         return self._time_zones
 
     @property
     def config(self) -> Config:
+        """
+        возвращает объект класса Config
+        """
         return self._config
 
     def save_config(self, cfg: Config):
-        # сохраняю все изменения
+        """
+        сохраняю все изменения
+        """
         cfg.set_last_update_time(QDateTime.currentDateTime())
         cmd = f"UPDATE config SET last_update_time={cfg.last_update_time}, pos_x={cfg.pos[0]}, pos_y={cfg.pos[1]}, pallette_id={cfg.pallette_id}, time_zone_id={cfg.timezone_id} WHERE config_id=1"
         cur = self._con.execute(cmd)
         self._con.commit()
 
     def delete_alarm(self, id: int):
-        # удаляю будильник из бд
+        """
+        удаляю будильник из бд
+        """
         cmd = f"DELETE FROM alarm WHERE alarm_id={id}"
         cur = self._con.execute(cmd)
         self._con.commit()
         self.load_alarms()
 
     def add_alarm(self, alarm: Alarm):
-        # добавляю будильник в бд
+        """
+        добавляю будильник в бд
+        """
         cmd_max_id = "SELECT MAX(alarm_id) FROM alarm"
         cur = self._con.execute(cmd_max_id).fetchall()
         max_id = cur[0][0] + 1
@@ -220,7 +298,9 @@ class AlarmDb:
         return max_id
 
     def update_alarm(self, alarm: Alarm):
-        # изменяю уже существующий будильник на тот, который я изменила
+        """
+        изменяю уже существующий будильник на тот, который я изменила
+        """
         cmd = f"UPDATE alarm SET alarm_time='{alarm.time}', alarm_type_id={alarm.type_id} WHERE alarm_id={alarm.id}"
         cur = self._con.execute(cmd)
         self._con.commit()
@@ -228,6 +308,9 @@ class AlarmDb:
 
     @property
     def sorted_alarms(self) -> list[Alarm]:
+        """
+        возвращает сортированные по времени список будильников
+        """
         return self._sorted_alarms
 
 
