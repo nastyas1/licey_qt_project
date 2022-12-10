@@ -1,2 +1,5 @@
 *.pyc
 cher.ui
+*.spec
+build
+dist
